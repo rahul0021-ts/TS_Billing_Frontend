@@ -1,0 +1,132 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --primary: #1D9E75;
+    --primary-dark: #085041;
+    --primary-light: #E1F5EE;
+    --wa: #25D366;
+  }
+
+  html, body {
+    @apply bg-ink-900 text-ink-50 font-body;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  * {
+    @apply box-border;
+  }
+
+  /* Fix invisible typed text in dark theme */
+  input,
+  textarea,
+  select {
+    color: #f5f4f0 !important;
+    caret-color: #1D9E75;
+  }
+
+  /* Fix Chrome autofill yellow/white background override */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 40px #2e2c28 inset !important;
+    -webkit-text-fill-color: #f5f4f0 !important;
+    caret-color: #1D9E75;
+  }
+
+  option {
+    background-color: #2e2c28;
+    color: #f5f4f0;
+  }
+
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-ink-800;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-ink-600 rounded-full;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl font-body font-medium text-sm transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl font-body font-medium text-sm transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 bg-primary-400 text-white hover:bg-primary-600;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl font-body font-medium text-sm transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 bg-ink-800 text-ink-200 hover:bg-ink-600 border border-ink-700;
+  }
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl font-body font-medium text-sm transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 bg-red-900/60 text-red-300 hover:bg-red-800/80 border border-red-800/50;
+  }
+  .btn-wa {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl font-body font-medium text-sm transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 text-white;
+    background-color: var(--wa);
+  }
+  .btn-wa:hover {
+    background-color: #20c05a;
+  }
+  .input {
+    @apply w-full bg-ink-800 border border-ink-700 rounded-xl px-3 py-2 text-sm
+    focus:outline-none focus:border-primary-400 focus:ring-1 focus:ring-primary-400/30 transition-all;
+    color: #f5f4f0 !important;
+    caret-color: #1D9E75;
+  }
+  .input::placeholder {
+    color: #8a8778;
+  }
+  .card {
+    @apply bg-ink-800/60 border border-ink-700/50 rounded-2xl;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border transition-all duration-100 cursor-pointer select-none;
+  }
+  .chip-default {
+    @apply bg-ink-800 border-ink-600 text-ink-200 inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border transition-all duration-100 cursor-pointer select-none;
+  }
+  .chip-default:hover {
+    @apply border-primary-400/50;
+  }
+  .chip-active {
+    @apply bg-primary-400 border-primary-400 text-white inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border transition-all duration-100 cursor-pointer select-none shadow-lg;
+    box-shadow: 0 4px 14px rgba(29, 158, 117, 0.2);
+  }
+  .section-label {
+    @apply text-xs font-mono uppercase tracking-widest text-primary-400 font-medium;
+  }
+  .modal-overlay {
+    @apply fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4;
+    background: rgba(10, 15, 30, 0.85);
+    backdrop-filter: blur(4px);
+  }
+  .modal-box {
+    @apply bg-ink-800 border border-ink-700 rounded-t-3xl sm:rounded-2xl w-full sm:max-w-lg max-h-[92vh] overflow-y-auto;
+    animation: slideIn 0.2s ease-out;
+  }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes pop {
+  0%   { transform: scale(0.92); }
+  60%  { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
