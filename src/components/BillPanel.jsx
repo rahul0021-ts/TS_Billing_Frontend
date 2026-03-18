@@ -174,7 +174,7 @@ export default function BillPanel() {
 
           {/* Payment method tabs */}
           <div className="flex gap-1.5">
-            {['cash', 'upi', 'Mix', 'other'].map(m => (
+            {['cash', 'upi', 'Mix'].map(m => (
               <button
                 key={m}
                 onClick={() => handleMethodClick(m)}
