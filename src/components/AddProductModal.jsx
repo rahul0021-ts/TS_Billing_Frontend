@@ -3,40 +3,39 @@ import { useSections, useCreateProduct } from '../hooks/useProducts'
 import { useBill } from '../hooks/useBill'
 import { parseSizeInput, buildRatesObject } from '../utils/validators'
 
+const QUICK_DEFAULTS = [1, 6, 12, 24, 48]
+
 export default function AddProductModal({ onClose }) {
   const { data: sections = [] } = useSections()
-  const createProduct = useCreateProduct()
-  const { addItem } = useBill()
+  const createProduct           = useCreateProduct()
+  const { addItem }             = useBill()
 
-  // Section/subsection
-  const [sectionId, setSectionId] = useState('')
+  const [sectionId, setSectionId]       = useState('')
   const [subsectionId, setSubsectionId] = useState('')
+  const [name, setName]                 = useState('')
+  const [nameHindi, setNameHindi]       = useState('')
+  const [sizeInput, setSizeInput]       = useState('')
+  const [sizes, setSizes]               = useState([])
+  const [rates, setRates]               = useState({})
+  const [baseRate, setBaseRate]         = useState('')
+  const [defaultQty, setDefaultQty]     = useState(1)
 
-  // Product info
-  const [name, setName] = useState('')
-  const [nameHindi, setNameHindi] = useState('')
+  // Direct bill add (no DB)
+  const [directName, setDirectName]         = useState('')
+  const [directSize, setDirectSize]         = useState('')
+  const [directRate, setDirectRate]         = useState('')
+  const [directDefaultQty, setDirectDefaultQty] = useState(1)
 
-  // Sizes
-  const [sizeInput, setSizeInput] = useState('')
-  const [sizes, setSizes] = useState([])
-  const [rates, setRates] = useState({})
-  const [baseRate, setBaseRate] = useState('')
-
-  // Direct bill add
-  const [directName, setDirectName] = useState('')
-  const [directSize, setDirectSize] = useState('')
-  const [directRate, setDirectRate] = useState('')
-
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
+  const [saving, setSaving]   = useState(false)
+  const [error, setError]     = useState('')
   const [success, setSuccess] = useState('')
 
   const selectedSection = sections.find(s => s.sectionId === sectionId)
-  const subsections = selectedSection?.subsections || []
+  const subsections     = selectedSection?.subsections || []
 
   function addSizes() {
     const newSizes = parseSizeInput(sizeInput).filter(s => !sizes.includes(s))
-    if (newSizes.length === 0) return
+    if (!newSizes.length) return
     setSizes(prev => [...prev, ...newSizes])
     setSizeInput('')
   }
@@ -46,38 +45,23 @@ export default function AddProductModal({ onClose }) {
     setRates(prev => { const r = { ...prev }; delete r[size]; return r })
   }
 
-  function applyBaseRateToAll() {
-    if (!baseRate) return
-    const r = {}
-    sizes.forEach(s => r[s] = baseRate)
-    setRates(r)
-  }
-
-  function applyBaseRateToEmpty() {
-    if (!baseRate) return
-    const r = { ...rates }
-    sizes.forEach(s => { if (!r[s]) r[s] = baseRate })
-    setRates(r)
-  }
-
-  function handleSizeKeyDown(e) {
-    if (e.key === 'Enter') { e.preventDefault(); addSizes() }
-  }
+  function applyToAll()   { if (!baseRate) return; const r = {}; sizes.forEach(s => r[s] = baseRate); setRates(r) }
+  function applyToEmpty() { if (!baseRate) return; setRates(r => { const n = {...r}; sizes.forEach(s => { if (!n[s]) n[s] = baseRate }); return n }) }
 
   async function handleSave() {
     setError('')
-    if (!name.trim()) return setError('Product name is required')
+    if (!name.trim())  return setError('Product name is required')
     if (!subsectionId) return setError('Select a sub-section')
-    if (sizes.length === 0) return setError('Add at least one size')
-    const cleanRates = buildRatesObject(sizes, rates)
+    if (!sizes.length) return setError('Add at least one size')
     setSaving(true)
     try {
       await createProduct.mutateAsync({
-        name: name.trim(),
-        nameHindi: nameHindi.trim(),
-        sectionId: subsectionId,
+        name:       name.trim(),
+        nameHindi:  nameHindi.trim(),
+        sectionId:  subsectionId,
         sizes,
-        rates: cleanRates,
+        rates:      buildRatesObject(sizes, rates),
+        defaultQty: Math.max(1, parseInt(defaultQty) || 1),
       })
       setSuccess('Product saved!')
       setTimeout(onClose, 1000)
@@ -89,19 +73,21 @@ export default function AddProductModal({ onClose }) {
   }
 
   function handleDirectAdd() {
-    if (!directName.trim()) return setError('Enter product name')
-    if (!directSize.trim()) return setError('Enter a size')
-    if (!directRate || isNaN(Number(directRate))) return setError('Enter a valid rate')
+    if (!directName.trim())                        return setError('Enter product name')
+    if (!directSize.trim())                        return setError('Enter a size')
+    if (!directRate || isNaN(Number(directRate)))  return setError('Enter a valid rate')
     setError('')
+    const dq = Math.max(1, parseInt(directDefaultQty) || 1)
     addItem({
-      productId: null,
-      name: directName.trim(),
-      nameHindi: '',
-      sectionId: subsectionId || '',
-      size: directSize.trim(),
-      rate: Number(directRate),
+      productId:  null,
+      name:       directName.trim(),
+      nameHindi:  '',
+      sectionId:  '',
+      size:       directSize.trim(),
+      rate:       Number(directRate),
+      defaultQty: dq,
     })
-    setDirectName(''); setDirectSize(''); setDirectRate('')
+    setDirectName(''); setDirectSize(''); setDirectRate(''); setDirectDefaultQty(1)
     setSuccess('Added to bill!')
     setTimeout(() => setSuccess(''), 1500)
   }
@@ -109,6 +95,7 @@ export default function AddProductModal({ onClose }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-box" onClick={e => e.stopPropagation()}>
+
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-ink-700/50">
           <h2 className="font-display font-bold text-ink-100">Add Product</h2>
@@ -116,40 +103,127 @@ export default function AddProductModal({ onClose }) {
         </div>
 
         <div className="px-5 py-4 space-y-5">
-          {/* Direct bill add — quick section */}
+
+          {/* ── Quick add to bill (no DB) ── */}
           <div className="bg-primary-400/10 border border-primary-400/20 rounded-2xl p-4 space-y-3">
             <p className="section-label text-xs">Quick Add to Bill (no database)</p>
-            <div className="grid grid-cols-3 gap-2">
-              <input className="input col-span-3 text-sm" placeholder="Product name" value={directName} onChange={e => setDirectName(e.target.value)} />
-              <input className="input text-sm" placeholder="Size" value={directSize} onChange={e => setDirectSize(e.target.value)} />
-              <input type="number" className="input text-sm font-mono" placeholder="₹ Rate" value={directRate} onChange={e => setDirectRate(e.target.value)} />
-              <button onClick={handleDirectAdd} className="btn-primary text-sm">Add to Bill</button>
+            <div className="grid grid-cols-2 gap-2">
+              <input
+                className="input col-span-2 text-sm"
+                placeholder="Product name"
+                value={directName}
+                onChange={e => setDirectName(e.target.value)}
+              />
+              <input
+                className="input text-sm"
+                placeholder="Size (e.g. L, 32, Free)"
+                value={directSize}
+                onChange={e => setDirectSize(e.target.value)}
+              />
+              <input
+                type="number"
+                className="input text-sm font-mono"
+                placeholder="₹ Rate"
+                value={directRate}
+                onChange={e => setDirectRate(e.target.value)}
+              />
             </div>
+
+            {/* Default qty for direct add */}
+            <div>
+              <p className="text-xs text-ink-500 mb-1.5">Default quantity when added to bill</p>
+              <div className="flex gap-1.5 flex-wrap items-center">
+                {QUICK_DEFAULTS.map(n => (
+                  <button
+                    key={n}
+                    onClick={() => setDirectDefaultQty(n)}
+                    className={`px-3 py-1 rounded-xl text-xs font-mono font-medium border transition-all ${
+                      Number(directDefaultQty) === n
+                        ? 'bg-primary-400/20 border-primary-400/40 text-primary-400'
+                        : 'bg-ink-700 border-ink-600 text-ink-400 hover:border-ink-500'
+                    }`}
+                  >{n}</button>
+                ))}
+                <input
+                  type="number" min="1" placeholder="Other"
+                  value={QUICK_DEFAULTS.includes(Number(directDefaultQty)) ? '' : directDefaultQty}
+                  onChange={e => setDirectDefaultQty(e.target.value)}
+                  className="input w-20 text-sm font-mono py-1"
+                />
+              </div>
+            </div>
+
+            <button onClick={handleDirectAdd} className="btn-primary w-full text-sm">
+              Add to Bill
+            </button>
           </div>
 
-          {/* Section select */}
+          {/* ── Section / subsection ── */}
           <div className="space-y-2">
             <p className="section-label">Section</p>
             <div className="grid grid-cols-2 gap-2">
-              <select className="input text-sm" value={sectionId} onChange={e => { setSectionId(e.target.value); setSubsectionId('') }}>
+              <select
+                className="input text-sm"
+                value={sectionId}
+                onChange={e => { setSectionId(e.target.value); setSubsectionId('') }}
+              >
                 <option value="">— Section —</option>
                 {sections.map(s => <option key={s.sectionId} value={s.sectionId}>{s.label}</option>)}
               </select>
-              <select className="input text-sm" value={subsectionId} onChange={e => setSubsectionId(e.target.value)} disabled={!sectionId}>
+              <select
+                className="input text-sm"
+                value={subsectionId}
+                onChange={e => setSubsectionId(e.target.value)}
+                disabled={!sectionId}
+              >
                 <option value="">— Sub-section —</option>
                 {subsections.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
               </select>
             </div>
           </div>
 
-          {/* Product names */}
+          {/* ── Product names ── */}
           <div className="space-y-2">
             <p className="section-label">Product Name</p>
             <input className="input text-sm" placeholder="English name" value={name} onChange={e => setName(e.target.value)} />
             <input className="input text-sm" placeholder="हिंदी नाम (optional)" value={nameHindi} onChange={e => setNameHindi(e.target.value)} />
           </div>
 
-          {/* Size input */}
+          {/* ── Default quantity ── */}
+          <div className="space-y-2">
+            <p className="section-label">
+              Default Quantity
+              <span className="ml-2 text-ink-500 normal-case font-normal text-xs">
+                — auto pre-fills in bill (customer can change)
+              </span>
+            </p>
+            <div className="flex gap-1.5 flex-wrap items-center">
+              {QUICK_DEFAULTS.map(n => (
+                <button
+                  key={n}
+                  onClick={() => setDefaultQty(n)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-mono font-medium border transition-all ${
+                    Number(defaultQty) === n
+                      ? 'bg-primary-400/20 border-primary-400/40 text-primary-400'
+                      : 'bg-ink-700 border-ink-600 text-ink-400 hover:border-ink-500'
+                  }`}
+                >{n === 1 ? '1 (default)' : n}</button>
+              ))}
+              <input
+                type="number" min="1" placeholder="Custom"
+                value={QUICK_DEFAULTS.includes(Number(defaultQty)) ? '' : defaultQty}
+                onChange={e => setDefaultQty(e.target.value)}
+                className="input w-24 text-sm font-mono py-1.5"
+              />
+            </div>
+            {Number(defaultQty) > 1 && (
+              <p className="text-xs text-primary-400/70 px-1">
+                When you tap +, this item will start at {defaultQty} in the bill
+              </p>
+            )}
+          </div>
+
+          {/* ── Sizes ── */}
           <div className="space-y-2">
             <p className="section-label">Sizes</p>
             <div className="flex gap-2">
@@ -158,7 +232,7 @@ export default function AddProductModal({ onClose }) {
                 placeholder="S M L XL  or  28,30,32  or  Free Size"
                 value={sizeInput}
                 onChange={e => setSizeInput(e.target.value)}
-                onKeyDown={handleSizeKeyDown}
+                onKeyDown={e => e.key === 'Enter' && addSizes()}
               />
               <button onClick={addSizes} className="btn-primary text-sm flex-shrink-0 px-4">Add</button>
             </div>
@@ -174,28 +248,24 @@ export default function AddProductModal({ onClose }) {
             )}
           </div>
 
-          {/* Rates */}
+          {/* ── Rates ── */}
           {sizes.length > 0 && (
             <div className="space-y-2">
               <p className="section-label">Rates</p>
               <div className="flex gap-2 items-center">
                 <input
-                  type="number"
-                  className="input w-28 text-sm font-mono"
-                  placeholder="Base ₹"
-                  value={baseRate}
-                  onChange={e => setBaseRate(e.target.value)}
+                  type="number" className="input w-28 text-sm font-mono" placeholder="Base ₹"
+                  value={baseRate} onChange={e => setBaseRate(e.target.value)}
                 />
-                <button onClick={applyBaseRateToAll} className="btn-ghost text-xs py-1.5">All</button>
-                <button onClick={applyBaseRateToEmpty} className="btn-ghost text-xs py-1.5">Empty</button>
+                <button onClick={applyToAll}   className="btn-ghost text-xs py-1.5">Apply all</button>
+                <button onClick={applyToEmpty} className="btn-ghost text-xs py-1.5">Fill empty</button>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 {sizes.map(sz => (
                   <div key={sz} className="flex items-center gap-2 bg-ink-700/50 rounded-xl px-3 py-1.5">
                     <span className="text-xs font-mono text-primary-400 w-12 flex-shrink-0">{sz}</span>
                     <input
-                      type="number"
-                      className="flex-1 bg-transparent text-sm font-mono text-ink-100 focus:outline-none"
+                      type="number" className="flex-1 bg-transparent text-sm font-mono text-ink-100 focus:outline-none"
                       placeholder="₹0"
                       value={rates[sz] || ''}
                       onChange={e => setRates(r => ({ ...r, [sz]: e.target.value }))}
@@ -206,14 +276,10 @@ export default function AddProductModal({ onClose }) {
             </div>
           )}
 
-          {error && <p className="text-red-400 text-sm bg-red-900/20 border border-red-800/30 rounded-xl px-3 py-2">{error}</p>}
+          {error   && <p className="text-red-400 text-sm bg-red-900/20 border border-red-800/30 rounded-xl px-3 py-2">{error}</p>}
           {success && <p className="text-primary-400 text-sm bg-primary-400/10 border border-primary-400/20 rounded-xl px-3 py-2">{success}</p>}
 
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="btn-primary w-full py-3 text-sm"
-          >
+          <button onClick={handleSave} disabled={saving} className="btn-primary w-full py-3 text-sm">
             {saving ? 'Saving...' : 'Save to Database'}
           </button>
         </div>

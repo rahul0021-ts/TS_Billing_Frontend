@@ -3,15 +3,19 @@ import { useAllProducts, useSections, useUpdateProduct, useToggleProduct } from 
 import { parseSizeInput, buildRatesObject } from '../utils/validators'
 import AddProductModal from '../components/AddProductModal'
 
-function EditModal({ product, sections, onClose }) {
+const QUICK_DEFAULTS = [1, 6, 12, 24, 48]
+
+function EditModal({ product, onClose }) {
   const updateProduct = useUpdateProduct()
-  const [name, setName] = useState(product.name)
+
+  const [name, setName]           = useState(product.name)
   const [nameHindi, setNameHindi] = useState(product.nameHindi || '')
-  const [sizes, setSizes] = useState(product.sizes || [])
-  const [rates, setRates] = useState({ ...product.rates })
+  const [sizes, setSizes]         = useState(product.sizes || [])
+  const [rates, setRates]         = useState({ ...product.rates })
+  const [defaultQty, setDefaultQty] = useState(product.defaultQty || 1)
   const [sizeInput, setSizeInput] = useState('')
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
+  const [saving, setSaving]       = useState(false)
+  const [error, setError]         = useState('')
 
   function addSizes() {
     const newSizes = parseSizeInput(sizeInput).filter(s => !sizes.includes(s))
@@ -27,11 +31,20 @@ function EditModal({ product, sections, onClose }) {
 
   async function handleSave() {
     setError('')
-    if (!name.trim()) return setError('Name is required')
-    if (sizes.length === 0) return setError('Add at least one size')
+    if (!name.trim())  return setError('Name is required')
+    if (!sizes.length) return setError('Add at least one size')
     setSaving(true)
     try {
-      await updateProduct.mutateAsync({ id: product._id, data: { name: name.trim(), nameHindi: nameHindi.trim(), sizes, rates: buildRatesObject(sizes, rates) } })
+      await updateProduct.mutateAsync({
+        id: product._id,
+        data: {
+          name:       name.trim(),
+          nameHindi:  nameHindi.trim(),
+          sizes,
+          rates:      buildRatesObject(sizes, rates),
+          defaultQty: Math.max(1, parseInt(defaultQty) || 1),
+        }
+      })
       onClose()
     } catch (e) {
       setError(e.response?.data?.message || 'Save failed')
@@ -47,36 +60,80 @@ function EditModal({ product, sections, onClose }) {
           <h2 className="font-display font-bold text-ink-100">Edit Product</h2>
           <button onClick={onClose} className="w-8 h-8 rounded-xl hover:bg-ink-700 text-ink-400 flex items-center justify-center">✕</button>
         </div>
+
         <div className="px-5 py-4 space-y-4">
           <input className="input text-sm" placeholder="English name" value={name} onChange={e => setName(e.target.value)} />
           <input className="input text-sm" placeholder="हिंदी नाम" value={nameHindi} onChange={e => setNameHindi(e.target.value)} />
 
+          {/* Default Qty */}
+          <div className="space-y-2">
+            <p className="section-label">
+              Default Quantity
+              <span className="ml-2 text-ink-500 normal-case font-normal text-xs">pre-fills in bill</span>
+            </p>
+            <div className="flex gap-1.5 flex-wrap items-center">
+              {QUICK_DEFAULTS.map(n => (
+                <button
+                  key={n}
+                  onClick={() => setDefaultQty(n)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-mono font-medium border transition-all ${
+                    Number(defaultQty) === n
+                      ? 'bg-primary-400/20 border-primary-400/40 text-primary-400'
+                      : 'bg-ink-700 border-ink-600 text-ink-400 hover:border-ink-500'
+                  }`}
+                >{n}</button>
+              ))}
+              <input
+                type="number" min="1" placeholder="Custom"
+                value={QUICK_DEFAULTS.includes(Number(defaultQty)) ? '' : defaultQty}
+                onChange={e => setDefaultQty(e.target.value)}
+                className="input w-20 text-sm font-mono py-1.5"
+              />
+            </div>
+            {Number(defaultQty) > 1 && (
+              <p className="text-xs text-primary-400/70 px-1">Starts at {defaultQty} when added to bill</p>
+            )}
+          </div>
+
+          {/* Sizes */}
           <div className="space-y-2">
             <p className="section-label">Sizes</p>
             <div className="flex gap-2">
-              <input className="input flex-1 text-sm font-mono" placeholder="Add sizes" value={sizeInput} onChange={e => setSizeInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addSizes()} />
+              <input
+                className="input flex-1 text-sm font-mono" placeholder="Add sizes"
+                value={sizeInput} onChange={e => setSizeInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && addSizes()}
+              />
               <button onClick={addSizes} className="btn-ghost text-sm">Add</button>
             </div>
             <div className="flex flex-wrap gap-1.5">
               {sizes.map(sz => (
                 <span key={sz} className="inline-flex items-center gap-1 bg-ink-700 border border-ink-600 text-ink-200 px-2.5 py-1 rounded-full text-xs">
-                  {sz}<button onClick={() => removeSize(sz)} className="text-ink-500 hover:text-red-400 ml-0.5">×</button>
+                  {sz}
+                  <button onClick={() => removeSize(sz)} className="text-ink-500 hover:text-red-400 ml-0.5">×</button>
                 </span>
               ))}
             </div>
           </div>
 
+          {/* Rates */}
           <div className="grid grid-cols-2 gap-2">
             {sizes.map(sz => (
               <div key={sz} className="flex items-center gap-2 bg-ink-700/50 rounded-xl px-3 py-1.5">
                 <span className="text-xs font-mono text-primary-400 w-12">{sz}</span>
-                <input type="number" className="flex-1 bg-transparent text-sm font-mono text-ink-100 focus:outline-none" placeholder="₹0" value={rates[sz] || ''} onChange={e => setRates(r => ({ ...r, [sz]: e.target.value }))} />
+                <input
+                  type="number" className="flex-1 bg-transparent text-sm font-mono text-ink-100 focus:outline-none"
+                  placeholder="₹0" value={rates[sz] || ''}
+                  onChange={e => setRates(r => ({ ...r, [sz]: e.target.value }))}
+                />
               </div>
             ))}
           </div>
 
           {error && <p className="text-red-400 text-xs">{error}</p>}
-          <button onClick={handleSave} disabled={saving} className="btn-primary w-full py-3 text-sm">{saving ? 'Saving…' : 'Save Changes'}</button>
+          <button onClick={handleSave} disabled={saving} className="btn-primary w-full py-3 text-sm">
+            {saving ? 'Saving…' : 'Save Changes'}
+          </button>
         </div>
       </div>
     </div>
@@ -85,21 +142,23 @@ function EditModal({ product, sections, onClose }) {
 
 export default function ProductsPage() {
   const { data: products = [], isLoading } = useAllProducts()
-  const { data: sections = [] } = useSections()
-  const toggleProduct = useToggleProduct()
-  const [editProduct, setEditProduct] = useState(null)
-  const [showAdd, setShowAdd] = useState(false)
-  const [activeSection, setActiveSection] = useState('all')
-  const [search, setSearch] = useState('')
+  const { data: sections = [] }            = useSections()
+  const toggleProduct                      = useToggleProduct()
+  const [editProduct, setEditProduct]      = useState(null)
+  const [showAdd, setShowAdd]              = useState(false)
+  const [activeSection, setActiveSection]  = useState('all')
+  const [search, setSearch]                = useState('')
 
   const filtered = products.filter(p => {
-    const matchSection = activeSection === 'all' || p.sectionId === activeSection ||
+    const matchSection = activeSection === 'all' ||
+      p.sectionId === activeSection ||
       sections.find(s => s.sectionId === activeSection)?.subsections?.some(sub => sub.id === p.sectionId)
-    const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase()) || (p.nameHindi || '').includes(search)
+    const matchSearch = !search ||
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      (p.nameHindi || '').includes(search)
     return matchSection && matchSearch
   })
 
-  // Group by sectionId
   const grouped = {}
   filtered.forEach(p => {
     const sec = sections.find(s => s.subsections?.some(sub => sub.id === p.sectionId))
@@ -112,12 +171,7 @@ export default function ProductsPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-5 space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <input
-          className="input flex-1 text-sm"
-          placeholder="Search products…"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
+        <input className="input flex-1 text-sm" placeholder="Search products…" value={search} onChange={e => setSearch(e.target.value)} />
         <button onClick={() => setShowAdd(true)} className="btn-primary text-sm flex-shrink-0">+ Add Product</button>
       </div>
 
@@ -138,39 +192,52 @@ export default function ProductsPage() {
           <div key={label}>
             <div className="px-1 py-1.5 mb-1"><span className="section-label">{label}</span></div>
             <div className="card overflow-hidden divide-y divide-ink-700/30">
-              {prods.map(product => (
-                <div key={product._id} className={`flex items-center gap-3 px-4 py-3 ${!product.isActive ? 'opacity-50' : ''}`}>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-baseline gap-2 mb-1">
-                      <span className="text-sm font-medium text-ink-100 truncate">{product.name}</span>
-                      {product.nameHindi && <span className="text-xs text-ink-500">{product.nameHindi}</span>}
+              {prods.map(product => {
+                const defaultQty = product.defaultQty || 1
+                return (
+                  <div key={product._id} className={`flex items-center gap-3 px-4 py-3 ${!product.isActive ? 'opacity-50' : ''}`}>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-baseline gap-2 mb-1">
+                        <span className="text-sm font-medium text-ink-100 truncate">{product.name}</span>
+                        {product.nameHindi && <span className="text-xs text-ink-500">{product.nameHindi}</span>}
+                        {/* Default qty badge */}
+                        {defaultQty > 1 && (
+                          <span className="text-[10px] font-mono bg-ink-700 text-ink-400 border border-ink-600 px-1.5 py-0.5 rounded-full flex-shrink-0">
+                            default {defaultQty}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {(product.sizes || []).map(sz => (
+                          <span key={sz} className="text-xs font-mono bg-ink-700/60 text-ink-300 px-2 py-0.5 rounded-full">
+                            {sz}{product.rates?.[sz] ? ` ₹${product.rates[sz]}` : ''}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                    <div className="flex flex-wrap gap-1">
-                      {(product.sizes || []).map(sz => (
-                        <span key={sz} className="text-xs font-mono bg-ink-700/60 text-ink-300 px-2 py-0.5 rounded-full">
-                          {sz}{product.rates?.[sz] ? ` ₹${product.rates[sz]}` : ''}
-                        </span>
-                      ))}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <button onClick={() => setEditProduct(product)} className="btn-ghost text-xs py-1 px-3">Edit</button>
+                      <button
+                        onClick={() => toggleProduct.mutate(product._id)}
+                        className={`text-xs px-3 py-1 rounded-xl border transition-all ${
+                          product.isActive
+                            ? 'bg-red-900/40 border-red-700/50 text-red-400 hover:bg-red-900/70'
+                            : 'bg-ink-700 border-ink-600 text-ink-500'
+                        }`}
+                      >
+                        {product.isActive ? 'Delete' : 'Deleted'}
+                      </button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <button onClick={() => setEditProduct(product)} className="btn-ghost text-xs py-1 px-3">Edit</button>
-                    <button
-                      onClick={() => toggleProduct.mutate(product._id)}
-                      className={`text-xs px-3 py-1 rounded-xl border transition-all ${product.isActive ? 'bg-primary-400/10 border-primary-400/20 text-primary-400' : 'bg-ink-700 border-ink-600 text-ink-500'}`}
-                    >
-                      {product.isActive ? 'Active' : 'Off'}
-                    </button>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         ))
       )}
 
-      {editProduct && <EditModal product={editProduct} sections={sections} onClose={() => setEditProduct(null)} />}
-      {showAdd && <AddProductModal onClose={() => setShowAdd(false)} />}
+      {editProduct && <EditModal product={editProduct} onClose={() => setEditProduct(null)} />}
+      {showAdd     && <AddProductModal onClose={() => setShowAdd(false)} />}
     </div>
   )
 }

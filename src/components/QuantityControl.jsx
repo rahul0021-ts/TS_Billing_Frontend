@@ -3,34 +3,14 @@ import { getNextStep, getPrevStep, clampQty } from '../utils/qtySteps'
 
 export default function QuantityControl({ qty, onChange, steps }) {
   const [editing, setEditing] = useState(false)
-  const [raw, setRaw] = useState('')
+  const [raw, setRaw]         = useState('')
 
-  function handleMinus() {
-    onChange(getPrevStep(qty, steps))
-  }
+  function handlePlus()  { onChange(getNextStep(qty, steps)) }
+  function handleMinus() { onChange(getPrevStep(qty, steps)) }
 
-  function handlePlus() {
-    onChange(getNextStep(qty, steps))
-  }
-
-  function handleInputChange(e) {
-    setRaw(e.target.value)
-  }
-
-  function handleBlur() {
-    setEditing(false)
-    const v = clampQty(raw)
-    onChange(v)
-  }
-
-  function handleFocus() {
-    setEditing(true)
-    setRaw(String(qty))
-  }
-
-  function handleKeyDown(e) {
-    if (e.key === 'Enter') e.target.blur()
-  }
+  function handleFocus() { setEditing(true);  setRaw(String(qty)) }
+  function handleBlur()  { setEditing(false); onChange(clampQty(raw)) }
+  function handleKeyDown(e) { if (e.key === 'Enter') e.target.blur() }
 
   return (
     <div className="flex items-center gap-0.5">
@@ -43,7 +23,7 @@ export default function QuantityControl({ qty, onChange, steps }) {
         min="1"
         max="9999"
         value={editing ? raw : qty}
-        onChange={handleInputChange}
+        onChange={e => setRaw(e.target.value)}
         onFocus={handleFocus}
         onBlur={handleBlur}
         onKeyDown={handleKeyDown}

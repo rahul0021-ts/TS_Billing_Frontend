@@ -17,11 +17,23 @@ function billReducer(state, action) {
         i => i.productId === item.productId && i.size === item.size && item.productId
       )
       if (existIdx >= 0) {
+        // Already in bill — increment qty by 1
         const items = [...state.items]
         items[existIdx] = { ...items[existIdx], qty: items[existIdx].qty + 1 }
         return { ...state, items }
       }
-      return { ...state, items: [...state.items, { ...item, qty: item.qty || 1, id: Date.now() + Math.random() }] }
+      return {
+        ...state,
+        items: [
+          ...state.items,
+          {
+            ...item,
+            qty:        item.defaultQty || 1,   // pre-fill with defaultQty
+            defaultQty: item.defaultQty || 1,
+            id:         Date.now() + Math.random(),
+          },
+        ],
+      }
     }
     case 'REMOVE_ITEM':
       return { ...state, items: state.items.filter(i => i.id !== action.id) }
@@ -42,7 +54,6 @@ function billReducer(state, action) {
 
 export function BillProvider({ children }) {
   const [state, dispatch] = useReducer(billReducer, initialState)
-
   const subtotal = state.items.reduce((sum, i) => sum + Math.round(i.qty * i.rate), 0)
 
   return (
