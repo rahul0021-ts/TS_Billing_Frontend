@@ -22,14 +22,15 @@ function billReducer(state, action) {
         items[existIdx] = { ...items[existIdx], qty: items[existIdx].qty + 1 }
         return { ...state, items }
       }
+      const startQty = item.defaultQty && item.defaultQty > 0 ? item.defaultQty : 1
       return {
         ...state,
         items: [
           ...state.items,
           {
             ...item,
-            qty:        item.defaultQty || 1,   // pre-fill with defaultQty
-            defaultQty: item.defaultQty || 1,
+            qty:        startQty,   // fixed: always a valid number
+            defaultQty: startQty,
             id:         Date.now() + Math.random(),
           },
         ],

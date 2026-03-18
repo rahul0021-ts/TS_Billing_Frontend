@@ -7,9 +7,9 @@ import CustomerForm from './CustomerForm'
 import BillPreviewModal from './BillPreviewModal'
 import { formatForWhatsApp } from '../utils/receiptFormatter'
 
-const SPLIT_METHODS = ['cash', 'upi', 'card', 'other']
-const SPLIT_LABELS  = { cash: 'Cash', upi: 'UPI', card: 'Card', other: 'Other' }
-const SPLIT_ICONS   = { cash: '💵', upi: '📲', card: '💳', other: '🔄' }
+const SPLIT_METHODS = ['cash', 'upi', 'card']
+const SPLIT_LABELS  = { cash: 'Cash', upi: 'UPI', card: 'Card' }
+const SPLIT_ICONS   = { cash: '💵', upi: '📲', card: '💳' }
 
 export default function BillPanel() {
   const { items, billNo, customerPhone, subtotal, qtySteps, isGenerating, generateBill, removeItem, setQty, clearBill } = useBill()
@@ -58,7 +58,7 @@ export default function BillPanel() {
   function handleMethodClick(m) {
     setPaymentMethod(m)
     setError('')
-    if (m !== 'Mix') setSplits({ cash: '', upi: '', card: '', other: '' })
+    if (m !== 'Mix') setSplits({ cash: '', upi: '', card: ''})
   }
 
   async function handleGenerate() {
@@ -91,7 +91,7 @@ export default function BillPanel() {
     setGeneratedBill(null)
     setDiscount(0)
     setPaymentMethod('cash')
-    setSplits({ cash: '', upi: '', card: '', other: '' })
+    setSplits({ cash: '', upi: '', card: ''})
     setError('')
     clearBill()
   }
