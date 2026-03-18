@@ -6,7 +6,7 @@ export function useProducts(sectionId) {
   return useQuery({
     queryKey: ['products', sectionId],
     queryFn: () => productsApi.getAll(sectionId),
-    staleTime: 30000,
+    staleTime: 60000,
   })
 }
 
@@ -14,7 +14,7 @@ export function useAllProducts() {
   return useQuery({
     queryKey: ['products'],
     queryFn: () => productsApi.getAll(),
-    staleTime: 30000,
+    staleTime: 60000,
   })
 }
 
