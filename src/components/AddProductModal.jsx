@@ -10,20 +10,20 @@ export default function AddProductModal({ onClose }) {
   const createProduct           = useCreateProduct()
   const { addItem }             = useBill()
 
-  const [sectionId, setSectionId]       = useState('')
-  const [subsectionId, setSubsectionId] = useState('')
-  const [name, setName]                 = useState('')
-  const [nameHindi, setNameHindi]       = useState('')
-  const [sizeInput, setSizeInput]       = useState('')
-  const [sizes, setSizes]               = useState([])
-  const [rates, setRates]               = useState({})
-  const [baseRate, setBaseRate]         = useState('')
-  const [defaultQty, setDefaultQty]     = useState(1)
+  const [sectionId, setSectionId]           = useState('')
+  const [subsectionId, setSubsectionId]     = useState('')
+  const [name, setName]                     = useState('')
+  const [nameHindi, setNameHindi]           = useState('')
+  const [sizeInput, setSizeInput]           = useState('')
+  const [sizes, setSizes]                   = useState([])
+  const [rates, setRates]                   = useState({})
+  const [baseRate, setBaseRate]             = useState('')
+  const [defaultQty, setDefaultQty]         = useState(1)
 
   // Direct bill add (no DB)
-  const [directName, setDirectName]         = useState('')
-  const [directSize, setDirectSize]         = useState('')
-  const [directRate, setDirectRate]         = useState('')
+  const [directName, setDirectName]             = useState('')
+  const [directSize, setDirectSize]             = useState('')
+  const [directRate, setDirectRate]             = useState('')
   const [directDefaultQty, setDirectDefaultQty] = useState(1)
 
   const [saving, setSaving]   = useState(false)
@@ -32,6 +32,10 @@ export default function AddProductModal({ onClose }) {
 
   const selectedSection = sections.find(s => s.sectionId === sectionId)
   const subsections     = selectedSection?.subsections || []
+
+  // Always work with a clean integer
+  const dqNum        = Math.max(1, parseInt(defaultQty)        || 1)
+  const directDqNum  = Math.max(1, parseInt(directDefaultQty)  || 1)
 
   function addSizes() {
     const newSizes = parseSizeInput(sizeInput).filter(s => !sizes.includes(s))
@@ -61,7 +65,7 @@ export default function AddProductModal({ onClose }) {
         sectionId:  subsectionId,
         sizes,
         rates:      buildRatesObject(sizes, rates),
-        defaultQty: Math.max(1, parseInt(defaultQty) || 1),
+        defaultQty: dqNum,
       })
       setSuccess('Product saved!')
       setTimeout(onClose, 1000)
@@ -77,7 +81,6 @@ export default function AddProductModal({ onClose }) {
     if (!directSize.trim())                        return setError('Enter a size')
     if (!directRate || isNaN(Number(directRate)))  return setError('Enter a valid rate')
     setError('')
-    const dq = Math.max(1, parseInt(directDefaultQty) || 1)
     addItem({
       productId:  null,
       name:       directName.trim(),
@@ -85,7 +88,7 @@ export default function AddProductModal({ onClose }) {
       sectionId:  '',
       size:       directSize.trim(),
       rate:       Number(directRate),
-      defaultQty: dq,
+      defaultQty: directDqNum,
     })
     setDirectName(''); setDirectSize(''); setDirectRate(''); setDirectDefaultQty(1)
     setSuccess('Added to bill!')
@@ -129,16 +132,15 @@ export default function AddProductModal({ onClose }) {
               />
             </div>
 
-            {/* Default qty for direct add */}
             <div>
-              <p className="text-xs text-ink-500 mb-1.5">Default quantity when added to bill</p>
+              <p className="text-xs text-ink-500 mb-1.5">Default quantity</p>
               <div className="flex gap-1.5 flex-wrap items-center">
                 {QUICK_DEFAULTS.map(n => (
                   <button
                     key={n}
                     onClick={() => setDirectDefaultQty(n)}
                     className={`px-3 py-1 rounded-xl text-xs font-mono font-medium border transition-all ${
-                      Number(directDefaultQty) === n
+                      directDqNum === n
                         ? 'bg-primary-400/20 border-primary-400/40 text-primary-400'
                         : 'bg-ink-700 border-ink-600 text-ink-400 hover:border-ink-500'
                     }`}
@@ -146,7 +148,7 @@ export default function AddProductModal({ onClose }) {
                 ))}
                 <input
                   type="number" min="1" placeholder="Other"
-                  value={QUICK_DEFAULTS.includes(Number(directDefaultQty)) ? '' : directDefaultQty}
+                  value={QUICK_DEFAULTS.includes(directDqNum) ? '' : directDefaultQty}
                   onChange={e => setDirectDefaultQty(e.target.value)}
                   className="input w-20 text-sm font-mono py-1"
                 />
@@ -194,7 +196,7 @@ export default function AddProductModal({ onClose }) {
             <p className="section-label">
               Default Quantity
               <span className="ml-2 text-ink-500 normal-case font-normal text-xs">
-                — auto pre-fills in bill (customer can change)
+                — auto pre-fills in bill (customer can change freely)
               </span>
             </p>
             <div className="flex gap-1.5 flex-wrap items-center">
@@ -203,24 +205,25 @@ export default function AddProductModal({ onClose }) {
                   key={n}
                   onClick={() => setDefaultQty(n)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-mono font-medium border transition-all ${
-                    Number(defaultQty) === n
+                    dqNum === n
                       ? 'bg-primary-400/20 border-primary-400/40 text-primary-400'
                       : 'bg-ink-700 border-ink-600 text-ink-400 hover:border-ink-500'
                   }`}
-                >{n === 1 ? '1 (default)' : n}</button>
+                >{n === 1 ? '1 (retail)' : n}</button>
               ))}
               <input
                 type="number" min="1" placeholder="Custom"
-                value={QUICK_DEFAULTS.includes(Number(defaultQty)) ? '' : defaultQty}
+                value={QUICK_DEFAULTS.includes(dqNum) ? '' : defaultQty}
                 onChange={e => setDefaultQty(e.target.value)}
                 className="input w-24 text-sm font-mono py-1.5"
               />
             </div>
-            {Number(defaultQty) > 1 && (
-              <p className="text-xs text-primary-400/70 px-1">
-                When you tap +, this item will start at {defaultQty} in the bill
-              </p>
-            )}
+            <p className="text-xs px-1">
+              {dqNum === 1
+                ? <span className="text-ink-500">Starts at 1 when added to bill</span>
+                : <span className="text-primary-400">Starts at <strong>{dqNum}</strong> when added to bill</span>
+              }
+            </p>
           </div>
 
           {/* ── Sizes ── */}
