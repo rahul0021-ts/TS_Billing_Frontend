@@ -34,8 +34,8 @@ export default function AddProductModal({ onClose }) {
   const subsections     = selectedSection?.subsections || []
 
   // Always work with a clean integer
-  const dqNum        = Math.max(1, parseInt(defaultQty)        || 1)
-  const directDqNum  = Math.max(1, parseInt(directDefaultQty)  || 1)
+  const dqNum        = Math.max(1, parseInt(defaultQty))
+  const directDqNum  = Math.max(1, parseInt(directDefaultQty))
 
   function addSizes() {
     const newSizes = parseSizeInput(sizeInput).filter(s => !sizes.includes(s))
