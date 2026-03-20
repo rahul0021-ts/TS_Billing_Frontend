@@ -3,7 +3,7 @@ import { useSections, useCreateProduct } from '../hooks/useProducts'
 import { useBill } from '../hooks/useBill'
 import { parseSizeInput, buildRatesObject } from '../utils/validators'
 
-const QUICK_DEFAULTS = [1, 6, 12, 24, 48]
+const QUICK_DEFAULTS = [1,3,5,6,10,12,50]
 
 export default function AddProductModal({ onClose }) {
   const { data: sections = [] } = useSections()
