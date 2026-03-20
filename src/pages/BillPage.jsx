@@ -85,7 +85,7 @@ export default function BillPage() {
               type="text"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder={listening ? 'Listening…' : 'Search products… (Hindi or English)'}
+              placeholder={listening ? 'Listening…' : 'Search products… (by Rate or by Name)'}
               className={`input pl-9 text-sm transition-all ${
                 listening
                   ? 'border-red-400/60 ring-1 ring-red-400/20 placeholder-red-400/70'
