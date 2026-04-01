@@ -9,7 +9,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Fashion Garments',
+        name: 'Supekar Garments',
         short_name: 'Garments',
         description: 'Fashion Garments Billing System',
         theme_color: '#1D9E75',
