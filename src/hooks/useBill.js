@@ -15,10 +15,12 @@ export function useBill() {
 
   async function generateBill({ discount = 0, paymentMethod = 'cash' } = {}) {
     if (ctx.items.length === 0) throw new Error('Bill is empty')
+
     const payload = {
       customer: {
         name: ctx.customerName || 'Walk-in Customer',
         phone: ctx.customerPhone || '',
+        city: ctx.customerCity || '',
       },
       items: ctx.items.map(i => ({
         productId: i.productId || undefined,
@@ -33,8 +35,14 @@ export function useBill() {
       discount,
       paymentMethod,
     }
+
     const bill = await createBillMutation.mutateAsync(payload)
-    ctx.dispatch({ type: 'SET_BILL_NO', billNo: bill.billNo })
+
+    ctx.dispatch({
+      type: 'SET_BILL_NO',
+      billNo: bill.billNo,
+    })
+
     return bill
   }
 
@@ -50,24 +58,36 @@ export function useBill() {
     ctx.dispatch({ type: 'SET_QTY', id, qty })
   }
 
-  function setCustomer(name, phone) {
-    ctx.dispatch({ type: 'SET_CUSTOMER', name, phone })
+  // UPDATED
+  function setCustomer(name, phone, city = '') {
+    ctx.dispatch({
+      type: 'SET_CUSTOMER',
+      name,
+      phone,
+      city,
+    })
   }
 
   function clearBill() {
     ctx.dispatch({ type: 'CLEAR_BILL' })
   }
 
-  const qtySteps = settings?.qtySteps || [1, 2, 3, 6, 9, 12, 15, 18, 21, 24]
+  const qtySteps =
+    settings?.qtySteps || [1, 2, 3, 6, 9, 12, 15, 18, 21, 24]
 
   return {
     items: ctx.items,
     billNo: ctx.billNo,
+
     customerName: ctx.customerName,
     customerPhone: ctx.customerPhone,
+    customerCity: ctx.customerCity, // NEW
+
     subtotal: ctx.subtotal,
     qtySteps,
+
     isGenerating: createBillMutation.isPending,
+
     generateBill,
     addItem,
     removeItem,

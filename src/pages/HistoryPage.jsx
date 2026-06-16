@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback, memo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import * as billsApi from '../api/bills'
 import { useSettings } from '../hooks/useSettings'
@@ -6,43 +6,82 @@ import { useWhatsApp } from '../hooks/useWhatsApp'
 import { formatForWhatsApp } from '../utils/receiptFormatter'
 import { downloadBillPDF, sharePDFWhatsApp } from '../utils/pdfGenerator'
 
-function StatCard({ label, value, color = 'primary' }) {
+const StatCard = memo(function StatCard({
+  label,
+  value,
+  color = 'primary',
+}) {
   const colors = {
     primary: 'bg-primary-400/10 border-primary-400/20 text-primary-400',
-    amber:   'bg-amber-400/10 border-amber-400/20 text-amber-400',
-    blue:    'bg-blue-400/10 border-blue-400/20 text-blue-400',
-    purple:  'bg-purple-400/10 border-purple-400/20 text-purple-400',
+    amber: 'bg-amber-400/10 border-amber-400/20 text-amber-400',
+    blue: 'bg-blue-400/10 border-blue-400/20 text-blue-400',
+    purple: 'bg-purple-400/10 border-purple-400/20 text-purple-400',
   }
+
   return (
     <div className={`rounded-2xl border px-4 py-3 ${colors[color]}`}>
       <div className="text-2xl font-display font-bold">{value}</div>
       <div className="text-xs opacity-70 mt-0.5">{label}</div>
     </div>
   )
-}
+})
 
-function BillRow({ bill, settings, onWhatsApp }) {
-  const [expanded, setExpanded]   = useState(false)
+const BillRow = memo(function BillRow({
+  bill,
+  settings,
+  onWhatsApp,
+}) {
+  const [expanded, setExpanded] = useState(false)
   const [pdfLoading, setPdfLoading] = useState(false)
 
-  const date = new Date(bill.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
-  const time = new Date(bill.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+  const billDate = useMemo(
+    () => new Date(bill.createdAt),
+    [bill.createdAt]
+  )
 
-  async function handlePDFWhatsApp() {
+  const date = useMemo(
+    () =>
+      billDate.toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      }),
+    [billDate]
+  )
+
+  const time = useMemo(
+    () =>
+      billDate.toLocaleTimeString('en-IN', {
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+    [billDate]
+  )
+
+  const toggleExpanded = useCallback(() => {
+    setExpanded(prev => !prev)
+  }, [])
+
+  const handlePDFWhatsApp = useCallback(async () => {
     setPdfLoading(true)
+
     try {
-      await sharePDFWhatsApp(bill, settings, bill.customer?.phone)
+      await sharePDFWhatsApp(
+        bill,
+        settings,
+        bill.customer?.phone
+      )
     } catch {
       downloadBillPDF(bill, settings)
     } finally {
       setPdfLoading(false)
     }
-  }
+  }, [bill, settings])
 
   return (
     <div className="card overflow-hidden">
       <button
-        onClick={() => setExpanded(e => !e)}
+        onClick={toggleExpanded}
         className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-ink-700/20 transition-colors"
       >
         <div className="flex items-center gap-3">
@@ -130,7 +169,7 @@ function BillRow({ bill, settings, onWhatsApp }) {
       )}
     </div>
   )
-}
+})
 
 export default function HistoryPage() {
   const [search, setSearch]   = useState('')
@@ -143,12 +182,20 @@ export default function HistoryPage() {
 
   const { data: stats } = useQuery({
     queryKey: ['bills', 'stats'],
-    queryFn:  billsApi.getStats,
+    queryFn: billsApi.getStats,
+    staleTime: 60000,
   })
 
   const { data, isLoading } = useQuery({
     queryKey: ['bills', { from, to, page }],
-    queryFn:  () => billsApi.getAll({ from: from || undefined, to: to || undefined, page, limit: 50 }),
+    queryFn: () =>
+      billsApi.getAll({
+        from: from || undefined,
+        to: to || undefined,
+        page,
+        limit: 50,
+      }),
+    staleTime: 30000,
   })
 
   const allBills   = data?.data        || []
@@ -166,20 +213,23 @@ export default function HistoryPage() {
     )
   }, [allBills, search])
 
-  function handleWhatsApp(bill) {
-    const text = formatForWhatsApp(bill, settings)
-    sendViaLink(bill.customer.phone, text)
-  }
+  const handleWhatsApp = useCallback(
+    (bill) => {
+      const text = formatForWhatsApp(bill, settings)
+      sendViaLink(bill.customer.phone, text)
+    },
+    [settings, sendViaLink]
+  )
 
-  function clearSearch() {
+  const clearSearch = useCallback(() => {
     setSearch('')
-  }
+  }, [])
 
-  function clearFilters() {
+  const clearFilters = useCallback(() => {
     setFrom('')
     setTo('')
     setPage(1)
-  }
+  }, [])
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-5 space-y-5">
