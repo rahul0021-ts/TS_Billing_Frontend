@@ -2,7 +2,10 @@ import { useState } from 'react'
 import { useWhatsApp } from '../hooks/useWhatsApp'
 import { formatAsText, formatForWhatsApp } from '../utils/receiptFormatter'
 import { downloadBillPDF, previewBillPDF, sharePDFWhatsApp } from '../utils/pdfGenerator'
-
+import {
+  connectBluetoothPrinter,
+  printBluetoothReceipt
+} from '../utils/bluetoothPrinter'
 export default function BillPreviewModal({ bill, settings, onClose, onNew }) {
   const { sendViaLink } = useWhatsApp()
   const [pdfLoading, setPdfLoading] = useState(false)
@@ -13,6 +16,8 @@ export default function BillPreviewModal({ bill, settings, onClose, onNew }) {
   const waText = formatForWhatsApp(bill, settings)
   const phone  = bill?.customer?.phone
 
+  const [printerConnected, setPrinterConnected] = useState(false)
+  const [printerName, setPrinterName] = useState('')
   // ── Text WhatsApp ──────────────────────────────────────────────────────────
   function handleWhatsAppText() {
     if (phone) sendViaLink(phone, waText)
@@ -51,6 +56,25 @@ export default function BillPreviewModal({ bill, settings, onClose, onNew }) {
     } finally {
       setPdfLoading(false)
       setTimeout(() => setShareStatus(''), 3000)
+    }
+  }
+
+  async function handleConnectPrinter() {
+    const result = await connectBluetoothPrinter()
+  
+    if (result.success) {
+      setPrinterConnected(true)
+      setPrinterName(result.name)
+    } else {
+      alert(result.error)
+    }
+  }
+  
+  async function handlePrintBluetooth() {
+    try {
+      await printBluetoothReceipt(text)
+    } catch (err) {
+      alert(err.message)
     }
   }
 
@@ -105,6 +129,26 @@ export default function BillPreviewModal({ bill, settings, onClose, onNew }) {
             </button>
             <button onClick={handlePreviewPDF} className="btn-ghost text-sm py-2.5">
               👁 Preview PDF
+            </button>
+          </div>
+
+          {/* Bluetooth Printer */}
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={handleConnectPrinter}
+              className="btn-primary text-sm py-2.5"
+            >
+              {printerConnected
+                ? `🖨 ${printerName}`
+                : '🔵 Connect Printer'}
+            </button>
+
+            <button
+              onClick={handlePrintBluetooth}
+              disabled={!printerConnected}
+              className="btn-primary text-sm py-2.5 disabled:opacity-50"
+            >
+              🖨 Print
             </button>
           </div>
 
