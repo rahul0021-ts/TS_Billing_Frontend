@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useBill } from '../hooks/useBill'
 import { useSettings } from '../hooks/useSettings'
 import { useWhatsApp } from '../hooks/useWhatsApp'
@@ -22,7 +22,7 @@ export default function BillPanel() {
   const [generatedBill, setGeneratedBill] = useState(null)
   const [showPreview, setShowPreview]     = useState(false)
   const [error, setError]                 = useState('')
-
+  const [checkedItems, setCheckedItems] = useState({})
   const total    = Math.max(0, subtotal - discount)
   const isMix    = paymentMethod === 'Mix'
 
@@ -86,12 +86,18 @@ export default function BillPanel() {
     }
     sendViaLink(customerPhone, formatForWhatsApp(fakeBill, settings))
   }
-
+  function toggleChecked(id) {
+    setCheckedItems(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }))
+  }
   function handleNewBill() {
     setGeneratedBill(null)
     setDiscount(0)
     setPaymentMethod('cash')
     setSplits({ cash: '', upi: '', card: ''})
+    setCheckedItems({})
     setError('')
     clearBill()
   }
@@ -127,8 +133,17 @@ export default function BillPanel() {
                   idx % 2 === 0 ? 'bg-ink-800/30' : 'bg-transparent'
                 } group animate-slide-in`}
               >
-                <span className="w-5 text-xs text-ink-600 font-mono flex-shrink-0">{idx + 1}</span>
-                <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <span className="w-5 text-xs text-ink-600 font-mono">{idx + 1}</span>
+                  <input
+                    type="checkbox"
+                    checked={!!checkedItems[item.id]}
+                    onChange={() => toggleChecked(item.id)}
+                    className="w-4 h-4 cursor-pointer accent-green-500"
+                    title="Packed / Verified"
+                  />
+                </div>
+                <div className={`flex-1 min-w-0 ${checkedItems[item.id] ? 'opacity-50 line-through' : '' }`}>
                   <div className="font-medium text-ink-100 truncate text-xs leading-tight">{item.name}</div>
                   {item.nameHindi && <div className="text-ink-500 text-xs truncate">{item.nameHindi}</div>}
                   <div className="text-primary-400 font-mono text-xs">{item.size}</div>
