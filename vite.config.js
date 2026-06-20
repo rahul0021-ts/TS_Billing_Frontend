@@ -18,7 +18,7 @@ export default defineConfig({
 
       manifest: {
         name: 'Supekar Garments Billing',
-        short_name: 'SG Billing',
+        short_name: 'TS Billing',
         description: 'Offline Garments Billing System',
 
         theme_color: '#1D9E75',
