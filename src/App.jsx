@@ -5,6 +5,7 @@ import ProductsPage from './pages/ProductsPage'
 import SettingsPage from './pages/SettingsPage'
 import CustomersPage from './pages/CustomersPage'
 import LoginPage from './pages/LoginPage'
+import QuickAddPage from './pages/QuickAddPage'   // add this import at the top
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('garment_token')
@@ -13,6 +14,7 @@ function PrivateRoute({ children }) {
 
 const navItems = [
   { to: '/', label: 'Bill', icon: '🧾', exact: true },
+  { to: '/quick-add', label: 'Quick Add', icon: '⚡' },
   { to: '/history', label: 'History', icon: '📋' },
   { to: '/products', label: 'Products', icon: '👕' },
   { to: '/customers', label: 'Customers', icon: '👥' },
@@ -67,6 +69,7 @@ export default function App() {
                 <main className="flex-1 overflow-hidden">
                   <Routes>
                     <Route path="/" element={<BillPage />} />
+                    <Route path="/quick-add" element={<QuickAddPage />} /> 
                     <Route path="/history" element={<HistoryPage />} />
                     <Route path="/products" element={<ProductsPage />} />
                     <Route path="/customers" element={<CustomersPage />} />
