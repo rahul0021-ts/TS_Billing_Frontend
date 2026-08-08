@@ -41,7 +41,7 @@ export default function SizeSelector({ sizes, productSelected, selectedProduct, 
               key={s}
               type="button"
               onClick={() => onSelect(s)}
-              className={`min-h-[clamp(48px,9vh,60px)] px-2 flex items-center justify-center rounded-xl border font-semibold text-sm transition-all active:scale-[0.96] ${
+              className={`min-h-[48px] px-2 flex items-center justify-center rounded-xl border font-semibold text-sm transition-all active:scale-[0.96] ${
                 isSelected
                   ? "bg-primary-400/15 border-primary-400 text-primary-400"
                   : "bg-ink-800 border-ink-700 text-ink-100 hover:border-ink-500"

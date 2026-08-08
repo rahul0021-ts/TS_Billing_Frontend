@@ -95,7 +95,7 @@ export default function ProductSelector({
                 type="button"
                 onClick={() => onSelect(p.name)}
                 className={[
-                  "min-h-[clamp(48px,9vh,60px)] rounded-xl px-3 flex items-center gap-2.5 border transition-all text-left active:scale-[0.98]",
+                  "min-h-[48px] rounded-xl px-3 flex items-center gap-2.5 border transition-all text-left active:scale-[0.98]",
                   isSelected
                     ? "bg-primary-400/15 border-primary-400 text-primary-400"
                     : "bg-ink-800 border-ink-700 text-ink-100 hover:border-ink-500",

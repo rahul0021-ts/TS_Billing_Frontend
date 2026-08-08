@@ -81,8 +81,8 @@ export default function QuickAddPage() {
   const showingSizes = Boolean(product);
 
   return (
-    <div className="h-screen flex flex-col bg-ink-900 text-ink-50 overflow-hidden select-none">
-      {/* Compact header */}
+    <div className="h-[100dvh] flex flex-col bg-ink-900 text-ink-50 overflow-hidden select-none">
+      {/* Compact header
       <header className="flex-none flex items-center justify-between px-3 py-2 bg-ink-800/80 border-b border-ink-700/50 backdrop-blur sticky top-0 z-40">
         <span className="text-primary-400 font-display font-bold text-base tracking-tight">
           Quick Add
@@ -102,7 +102,7 @@ export default function QuickAddPage() {
             Back
           </button>
         </div>
-      </header>
+      </header> */}
 
       {/* Everything below fits in one screen — no page scroll */}
       <div className="flex-1 min-h-0 flex flex-col gap-2 p-2 w-full max-w-md mx-auto">

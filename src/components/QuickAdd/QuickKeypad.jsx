@@ -62,7 +62,7 @@ export default function QuickKeypad({ mode, value, onDigit, onBackspace, onClear
               onClick={() => handleKeyPress(key)}
               aria-label={key}
               className={[
-                "min-h-[clamp(44px,9vh,60px)] rounded-xl text-lg font-semibold transition-all active:scale-95",
+                "min-h-[48px] rounded-xl text-lg font-semibold transition-all active:scale-95",
                 "border border-ink-700 bg-ink-800 text-ink-100 hover:border-primary-400/50",
                 decimalDisabled ? "opacity-30 cursor-not-allowed" : "",
               ].join(" ").trim()}

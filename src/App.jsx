@@ -78,14 +78,14 @@ export default function App() {
                 </main>
 
                 {/* Mobile Bottom Nav */}
-                <nav className="sm:hidden flex items-center justify-around bg-ink-800/95 border-t border-ink-700/50 backdrop-blur py-2 sticky bottom-0 z-40">
+                <nav className="sm:hidden flex items-center justify-around bg-ink-800/95 border-t border-ink-700/50 backdrop-blur py-1 sticky bottom-0 z-40">
                   {navItems.map(item => (
                     <NavLink
                       key={item.to}
                       to={item.to}
                       end={item.exact}
                       className={({ isActive }) =>
-                        `flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
+                        `flex flex-col items-center gap-0.3 px-2 py-0.5 rounded-xl transition-all ${
                           isActive
                             ? 'text-primary-400'
                             : 'text-ink-500'
@@ -93,7 +93,7 @@ export default function App() {
                       }
                     >
                       <span className="text-xl">{item.icon}</span>
-                      <span className="text-[10px] font-medium">
+                      <span className="text-[9px] font-medium">
                         {item.label}
                       </span>
                     </NavLink>
