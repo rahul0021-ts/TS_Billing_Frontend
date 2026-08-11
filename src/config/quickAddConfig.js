@@ -42,6 +42,9 @@ export const quickAddConfig = {
   },
   3: {
     products: [
+      { name: "Shirt", sizes: ["26X36", "32X36", "38X40", "20X24","S", "M", "L", "XL", "XXL", "3XL", "NA / Free"] },
+      { name: "Pant", sizes: ["28X32","26X30","32X36","38X40", "NA / Free"] },
+      { name: "Jenes", sizes: ["28X32","26X30","32X36","38X40", "NA / Free"] },
       { name: "Legi Drees", sizes: ["0", "20X24", "26X30", "32X34", "XL", "XXL", "NA / Free"] },
       { name: "Frok", sizes: ["0", "Free", "Other"] },
       { name: "Jenes", sizes: ["80", "90", "100"] },
@@ -69,6 +72,7 @@ export const quickAddConfig = {
     products: [
       { name: "Shirt", sizes: ["26X36", "32X36", "38X40", "20X24","S", "M", "L", "XL", "XXL", "3XL", "NA / Free"] },
       { name: "Pant", sizes: ["28X32","26X30","32X36","38X40", "NA / Free"] },
+      { name: "Jenes", sizes: ["28X32","26X30","32X36","38X40", "NA / Free"] },
       { name: "VIP", sizes: ["XL","XXL","NA / Free"] },
       { name: "Night Pant", sizes: ["1-2-3","4-5-6","7-8-9","10-11-12","L", "XL", "XXL", "NA / Free"] },
       { name: "Dhoti", sizes: ["XL", "XXL","32X34","26X30", "NA / Free"] },
@@ -95,6 +99,7 @@ export const quickAddConfig = {
       { name: "Stall", sizes: ["S", "M", "L", "XL", "NA / Free"] },
       { name: "Heram", sizes: ["O","S","NA / Free"] },
       { name: "Tipka Chaddi", sizes: ["S","M","L","XL","NA / Free"] },
+      { name: "Scarf", sizes: ["NA / Free"] },
       { name: "Uparne", sizes: ["NA / Free"] },
       { name: "Kadak Topi", sizes: ["NA / Free"] },
       { name: "NA", sizes: ["NA / Free"] },
@@ -114,15 +119,13 @@ export const quickAddConfig = {
     products: [
       { name: "Blouse Piss", sizes: ["TIP-TOP","Rajvada","Ghugat","Raipur","NA"] },
       { name: "Aasstar", sizes: ["Dollar", "Bani-thani", "NA / Free"] },
-      { name: "Blanket", sizes: ["Single", "Double", "NA / Free"] },
       { name: "NA", sizes: ["NA / Free"] },
     ],
   },
   50: {
     products: [
-        { name: "Blouse Piss", sizes: ["TIP-TOP","Rajvada","Ghugat","Raipur","NA"] },
-        { name: "Aasstar", sizes: ["Dollar", "Bani-thani", "NA / Free"] },
-      { name: "Blanket", sizes: ["Single", "Double", "NA / Free"] },
+      { name: "Blouse Piss", sizes: ["TIP-TOP","Rajvada","Ghugat","Raipur","NA"] },
+      { name: "Aasstar", sizes: ["Dollar", "Bani-thani", "NA / Free"] },
       { name: "NA", sizes: ["NA / Free"] },
     ],
   },
